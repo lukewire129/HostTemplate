@@ -3,9 +3,9 @@ using Microsoft.Extensions.Hosting;
 using Sample.Views;
 
 namespace Sample
-{    public class Program
+{   
+    public class Program
     {
-        [STAThread]  // UI 스레드를 STA 모드로 설정
         public static void Main(string[] args)
         {
             var builder = Host.CreateApplicationBuilder (args);
@@ -23,13 +23,23 @@ namespace Sample
     {
         public static void RunWithApp(this IHost host)
         {
-            var app = host.Services.GetRequiredService<App> ();
-            var window = host.Services.GetRequiredService<MainWindow> ();
+            // 백그라운드 서비스 실행 (MTA 스레드)
+            Task.Run (() => host.StartAsync ());
 
-            // WPF 애플리케이션 실행
-            app.Run (window);
+            // UI 스레드 실행 (STA)
+            var uiThread = new Thread (() =>
+            {
+                var app = host.Services.GetRequiredService<App> ();
+                var window = host.Services.GetRequiredService<MainWindow> ();
+                app.Run (window);
+            });
 
-            host.RunAsync ().GetAwaiter ().GetResult ();
+            uiThread.SetApartmentState (ApartmentState.STA);
+            uiThread.Start ();
+            uiThread.Join ();
+
+            // 애플리케이션 종료 시 백그라운드 서비스 정리
+            host.StopAsync ().GetAwaiter ().GetResult ();
         }
     }
 }
