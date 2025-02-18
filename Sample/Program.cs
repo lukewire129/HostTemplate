@@ -14,6 +14,8 @@ namespace Sample
             builder.Services.AddSingleton<MainWindow> ();
             builder.Services.AddSingleton<MainContent> ();
 
+            builder.Services.AddBong ();
+
             var host = builder.Build ();
             host.RunWithApp ();
         }
@@ -21,6 +23,10 @@ namespace Sample
 
     public static class HostTemplateExtention
     {
+        public static IServiceCollection AddBong(this IServiceCollection services)
+        {
+            return services;
+        }
         public static void RunWithApp(this IHost host)
         {
             // 백그라운드 서비스 실행 (MTA 스레드)
